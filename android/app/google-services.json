@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "187325753352",
+    "project_id": "pharma-pos-ceb10",
+    "storage_bucket": "pharma-pos-ceb10.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:187325753352:android:bd2f4a35f217ecb2b8c9bd",
+        "android_client_info": {
+          "package_name": "com.example.pharmacy_pos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5JhBc7dnBetmkodd2Jbvo-M-dB-_FOdA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
