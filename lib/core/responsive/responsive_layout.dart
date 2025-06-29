@@ -27,7 +27,7 @@ class ResponsiveHelper {
   static double getScreenWidth(BuildContext context) =>
       MediaQuery.of(context).size.width;
 
-  static double getScreenHeight(BuildContext context) =>
+  static double getScreenHeight(BuildContext context, int i) =>
       MediaQuery.of(context).size.height;
 
   static EdgeInsets getResponsivePadding(BuildContext context) {

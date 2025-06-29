@@ -9,8 +9,8 @@ class PasswordField extends StatelessWidget {
   final String label;
   final String placeholder;
   final TextEditingController controller;
-  final void Function(String) onChanged;
-  final VoidCallback onSubmitted;
+  final void Function(String)? onChanged;
+  final VoidCallback? onSubmitted;
   final String? errorText;
 
   final Animation<Offset> errorSlideAnimation;
@@ -19,8 +19,8 @@ class PasswordField extends StatelessWidget {
     super.key,
     required this.label,
     required this.controller,
-    required this.onChanged,
-    required this.onSubmitted,
+     this.onChanged,
+     this.onSubmitted,
     this.errorText,
     required this.errorSlideAnimation,
     this.placeholder = 'Enter your password',

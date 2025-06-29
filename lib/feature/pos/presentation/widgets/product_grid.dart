@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/colors.dart';
-import '../../../../../core/theme/text_styles.dart';
-import '../../../../../core/responsive/responsive_layout.dart';
+import 'package:pharmacy_pos/feature/pos/data/models/product_model.dart';
+import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/text_styles.dart';
+import '../../../../core/responsive/responsive_layout.dart';
 
 class ProductGrid extends StatelessWidget {
   final String searchQuery;
@@ -15,26 +16,27 @@ class ProductGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final spacing = ResponsiveHelper.getResponsiveSpacing(context, 20);
-    final aspectRatio = 0.85;
+    final spacing = ResponsiveHelper.getResponsiveSpacing(context, 10);
+    final aspectRatio = 0.7;
 
     final crossAxisCount = ResponsiveHelper.isMobile(context)
-        ? 1
+        ? 2
         : ResponsiveHelper.isTablet(context)
         ? 2
         : 3;
 
     final products =
         List.generate(50, (index) {
-          return {
-            'name': 'Medicine #$index 500mg Extra Strength Pain Reliever',
-            'price': (index + 1) * 3.75,
-            'barcode': 'BC000$index',
-            'company': 'Pharma Co.',
-          };
+          return ProductModel(
+            name: 'Medicine #$index 500mg Extra Strength Pain Reliever',
+            price: (index + 1) * 3.75,
+            barcode: 'BC000$index',
+            company: 'Pharma Co.',
+            imageUrl: 'assets/images/medicine.jpg',
+          );
         }).where((p) {
-          final name = (p['name'] ?? '').toString().toLowerCase();
-          final barcode = (p['barcode'] ?? '').toString().toLowerCase();
+          final name = (p.name).toString().toLowerCase();
+          final barcode = (p.barcode).toString().toLowerCase();
           return name.contains(searchQuery) || barcode.contains(searchQuery);
         }).toList();
 
@@ -49,17 +51,22 @@ class ProductGrid extends StatelessWidget {
       ),
       itemBuilder: (context, index) {
         final product = products[index];
-        return ProductCard(product: product, onAddToCart: onAddToCart);
+        return ProductCardMap(product: {
+          'name': product.name,
+          'price': product.price,
+          'barcode': product.barcode,
+          'company': product.company,
+          'imageUrl': product.imageUrl,
+        }, onAddToCart: onAddToCart);
       },
     );
   }
 }
-
-class ProductCard extends StatelessWidget {
+class ProductCardMap extends StatelessWidget {
   final Map<String, dynamic> product;
   final Function(Map<String, dynamic>) onAddToCart;
 
-  const ProductCard({
+  const ProductCardMap({
     super.key,
     required this.product,
     required this.onAddToCart,
@@ -72,7 +79,7 @@ class ProductCard extends StatelessWidget {
     final smallFontSize = ResponsiveHelper.getResponsiveFontSize(context, 13);
     final spacing = ResponsiveHelper.getResponsiveSpacing(context, 16);
     final padding = ResponsiveHelper.getResponsiveSpacing(context, 12);
-    final buttonHeight = ResponsiveHelper.getResponsiveSpacing(context, 38);
+    
 
     return Material(
       elevation: 3,
@@ -86,40 +93,57 @@ class ProductCard extends StatelessWidget {
           border: Border.all(color: AppColors.borderGray),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+                          Flexible(
+                    child: FittedBox(
+                      child: ClipRRect(
+                     
+                        borderRadius: BorderRadius.circular(24),
+                        child: Image.asset(
+                          height: 300,
+                         width: 600,
+                          product['imageUrl'] ?? 'assets/images/p1.jpg',
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(Icons.image, size: 50, color: AppColors.textSecondary);
+                          },
+                          fit: BoxFit.cover,
+                          
+                        ),
+                      ),
+                    ),
+                  ),
             Expanded(
               child: Column(
+                spacing: spacing / 2,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    product['name'],
-                    style: AppStyles.bodyLarge.copyWith(
-                      fontSize: fontSize,
-                      fontWeight: FontWeight.w600,
+                  
+    
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      product['name'],
+                      style: AppStyles.bodyLarge.copyWith(
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: spacing / 6),
-                  FittedBox(
+
+                  Flexible(
                     child: Text(
                       'Barcode: ${product['barcode']}',
-                      style: AppStyles.caption.copyWith(fontSize: smallFontSize),
+                      style: AppStyles.caption.copyWith(
+                        fontSize: smallFontSize,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  FittedBox(
-                    child: Text(
-                      'Company: ${product['company']}',
-                      style: AppStyles.caption.copyWith(fontSize: smallFontSize),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  SizedBox(height: spacing / 6),
-                  FittedBox(
+                  Flexible(
                     child: Text(
                       '\$${(product['price'] as num).toStringAsFixed(2)}',
                       style: AppStyles.bodyLarge.copyWith(
@@ -132,21 +156,17 @@ class ProductCard extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: spacing / 4),
-            SizedBox(
-              width: double.infinity,
-              height: buttonHeight,
-              child: FittedBox(
-                child: ElevatedButton.icon(
-                  onPressed: () => onAddToCart(product),
-                  icon: const Icon(Icons.add_shopping_cart, size: 18),
-                  label: const Text('Add'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+
+            FittedBox(
+              child: ElevatedButton.icon(
+                onPressed: () => onAddToCart(product),
+                icon: const Icon(Icons.add_shopping_cart, size: 18),
+                label: const Text('Add'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),

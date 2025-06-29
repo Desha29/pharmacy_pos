@@ -5,16 +5,16 @@ import 'custom_text_field.dart';
 
 class EmailField extends StatelessWidget {
   final TextEditingController controller;
-  final void Function(String) onChanged;
-  final VoidCallback onSubmitted;
+  final void Function(String)? onChanged;
+  final VoidCallback? onSubmitted;
   final String? errorText;
   final Animation<Offset> errorSlideAnimation;
 
   const EmailField({
     super.key,
     required this.controller,
-    required this.onChanged,
-    required this.onSubmitted,
+     this.onChanged,
+     this.onSubmitted,
     this.errorText,
     required this.errorSlideAnimation,
   });

@@ -1,97 +1,16 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../data/helpers/firebase_helper.dart';
 import 'sign_up_state.dart';
 
 class SignUpCubit extends Cubit<SignUpState> {
   SignUpCubit() : super(const SignUpInitial());
 
-  void updateEmail(String email) {
-    final currentState = state;
-    if (currentState is SignUpInitial) {
-      emit(currentState.copyWith(email: email));
-    } else if (currentState is SignUpError) {
-      emit(
-        SignUpInitial(
-          email: email,
-          password: currentState.password,
-          confirmPassword: currentState.confirmPassword,
-        ),
-      );
-    } else if (currentState is SignUpValidationError) {
-      emit(
-        SignUpInitial(
-          email: email,
-          password: currentState.password,
-          confirmPassword: currentState.confirmPassword,
-        ),
-      );
-    }
-  }
+  
 
-  void updatePassword(String password) {
-    final currentState = state;
-    if (currentState is SignUpInitial) {
-      emit(currentState.copyWith(password: password));
-    } else if (currentState is SignUpError) {
-      emit(SignUpInitial(email: currentState.email, password: password,
-        confirmPassword: currentState.confirmPassword,
-      ));
-    } else if (currentState is SignUpValidationError) {
-      emit(
-        SignUpInitial(
-          email: currentState.email,
-          password: password,
-          confirmPassword: currentState.confirmPassword,
-        ),
-      );
-    }
-  }
 
-  void updateConfirmPassword(String confirmPassword) {
-    final currentState = state;
-    if (currentState is SignUpInitial) {
-      emit(currentState.copyWith(confirmPassword: confirmPassword));
-    } else if (currentState is SignUpError) {
-      emit(SignUpInitial(email: currentState.email, password:currentState. password,confirmPassword: confirmPassword));
-    } else if (currentState is SignUpValidationError) {
-      emit(
-        SignUpInitial(
-          email: currentState.email,
-          password: currentState.password,
-          confirmPassword: confirmPassword,
-        ),
-      );
-    }
-  }
 
-  void signUp() async {
-    final currentState = state;
-    if (currentState is! SignUpInitial) return;
 
-    final email = currentState.email;
-    final password = currentState.password;
-    final confirmPassword = currentState.confirmPassword;
-
-    // Validate
-    final emailError = _validateEmail(email);
-    final passwordError = _validatePassword(password);
-    final confirmPasswordError =
-        password != confirmPassword ? 'Passwords do not match' : null;
-
-    if (emailError != null ||
-        passwordError != null ||
-        confirmPasswordError != null) {
-      emit(
-        SignUpValidationError(
-          email: email,
-          password: password,
-          confirmPassword: confirmPassword,
-          emailError: emailError,
-          passwordError: passwordError,
-          confirmPasswordError: confirmPasswordError,
-        ),
-      );
-      return;
-    }
+  void signUp(String email, String password, String confirmPassword) async {
 
     emit(
       SignUpLoading(
@@ -102,11 +21,18 @@ class SignUpCubit extends Cubit<SignUpState> {
     );
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Fake success
-      emit(const SignUpSuccess());
+ FirebaseHelper.signUpWithEmailAndPassword(email, password).then((_) {
+        emit(SignUpSuccess());
+      }).catchError((error) {
+        emit(
+          SignUpError(
+            email: email,
+            password: password,
+            confirmPassword: confirmPassword,
+            errorMessage: error.toString(),
+          ),
+        );
+      });
     } catch (e) {
       emit(
         SignUpError(

@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pharmacy_pos/core/config/routes/app_router.dart';
 import 'package:pharmacy_pos/core/widgets/toast_helper.dart';
+
 import '../../../../core/animations/animations.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/responsive/responsive_layout.dart';
 import '../../../../core/theme/text_styles.dart';
-import '../../../inventory/pages/inventory_page.dart';
-import '../../../pos/presentation/pages/sales_pos_page.dart';
+import 'inventory_page.dart';
+import 'invoice_page.dart';
+import 'sales_pos_page.dart';
+
 import '../widgets/sidebar.dart';
 import '../widgets/header.dart';
 import '../widgets/dashboard_content.dart';
@@ -20,6 +23,7 @@ class PharmacyDashboard extends StatefulWidget {
   @override
   State<PharmacyDashboard> createState() => _PharmacyDashboardState();
 }
+
 class _PharmacyDashboardState extends State<PharmacyDashboard>
     with TickerProviderStateMixin {
   String _activeNavItem = 'dashboard';
@@ -50,9 +54,6 @@ class _PharmacyDashboardState extends State<PharmacyDashboard>
     super.dispose();
   }
 
-  
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,7 +65,7 @@ class _PharmacyDashboardState extends State<PharmacyDashboard>
             child: Row(
               children: [
                 // Desktop sidebar
-                if (!_isMobile)
+                if (!_isMobile || ResponsiveHelper.isTablet(context))
                   AnimatedContainer(
                     duration: AnimationConstants.medium,
                     curve: AnimationConstants.easeOut,
@@ -95,7 +96,7 @@ class _PharmacyDashboardState extends State<PharmacyDashboard>
                       Expanded(
                         child: AnimatedPageTransition(
                           pageKey: _activeNavItem,
-                          child: _getActivePage()
+                          child: _getActivePage(),
                         ),
                       ),
                     ],
@@ -199,18 +200,21 @@ class _PharmacyDashboardState extends State<PharmacyDashboard>
       },
     );
   }
-Widget _getActivePage() {
-  switch (_activeNavItem) {
-    case 'dashboard':
-      return DashboardContent(onNavigate: _setActiveNavItem);
-    case 'sales':
-      return const SalesPOSPage();
-    case 'inventory':
-      return const InventoryPage();
-    default:
-      return _buildPlaceholderContent();
+
+  Widget _getActivePage() {
+    switch (_activeNavItem) {
+      case 'dashboard':
+        return DashboardContent(onNavigate: _setActiveNavItem);
+      case 'sales':
+        return const SalesPOSPage();
+      case 'inventory':
+        return const InventoryPage();
+      case 'invoices':
+        return const InvoicePage();
+      default:
+        return _buildPlaceholderContent();
+    }
   }
-}
 
   IconData _getModuleIcon(String navItem) {
     switch (navItem) {
@@ -220,26 +224,24 @@ Widget _getActivePage() {
         return Icons.inventory_2;
       case 'invoices':
         return Icons.receipt_long;
-      case 'sync':
-        return Icons.cloud_sync;
-      case 'settings':
-        return Icons.settings;
+
       default:
         return Icons.dashboard;
     }
   }
+
   bool get _isMobile => ResponsiveHelper.isMobile(context);
 
   String _getPageTitle(String navItem) {
     switch (navItem) {
       case 'sales':
         return 'Sales POS';
-      case 'sync':
-        return 'Cloud Sync';
+
       default:
         return navItem[0].toUpperCase() + navItem.substring(1);
     }
   }
+
   void _setActiveNavItem(String item) {
     setState(() {
       _activeNavItem = item;
@@ -267,18 +269,15 @@ Widget _getActivePage() {
 
   void _handleLogout() {
     // Handle logout logic with animation
-   
+
     Future.delayed(AnimationConstants.fast, () {
-    
-    _activeNavItem = 'dashboard'; 
-    _isSidebarCollapsed = false; 
-    _showMobileSidebar = false;
-    _sidebarAnimationController.reverse(); 
-   
-       context.go( AppRouter.kLogin);
-       motionSnackBarSuccess(context, 'Logout successful'); 
-     
+      _activeNavItem = 'dashboard';
+      _isSidebarCollapsed = false;
+      _showMobileSidebar = false;
+      _sidebarAnimationController.reverse();
+
+      context.go(AppRouter.kLogin);
+      motionSnackBarSuccess(context, 'Logout successful');
     });
   }
-
 }

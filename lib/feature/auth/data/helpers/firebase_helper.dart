@@ -6,7 +6,7 @@ class FirebaseHelper {
   User? get currentUser => FirebaseServices.auth.currentUser;
   bool get isSignedIn => currentUser != null;
 
-  Future<void> signInWithEmailAndPassword(String email, String password) async {
+  static Future<void> signInWithEmailAndPassword(String email, String password) async {
     try {
       await FirebaseServices.auth.signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {
@@ -24,7 +24,7 @@ class FirebaseHelper {
     }
   }
 
-  Future<void> signUpWithEmailAndPassword(String email, String password) async {
+  static Future<void> signUpWithEmailAndPassword(String email, String password) async {
     try {
       await FirebaseServices.auth.createUserWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {

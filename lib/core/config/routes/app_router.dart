@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-import 'package:pharmacy_pos/feature/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:pharmacy_pos/feature/pos/presentation/pages/dashboard_page.dart';
 import 'package:pharmacy_pos/feature/pos/presentation/pages/sales_pos_page.dart';
 
 import '../../../feature/auth/presentation/pages/login_page.dart';
@@ -20,10 +20,7 @@ abstract class AppRouter {
         path: kDashboard,
         builder: (context, state) => const PharmacyDashboard(),
       ),
-      GoRoute(
-        path: kSalesPos,
-        builder: (context, state) => SalesPOSPage(),
-      ),
+      GoRoute(path: kSalesPos, builder: (context, state) => SalesPOSPage()),
     ],
   );
 }

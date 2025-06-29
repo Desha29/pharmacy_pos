@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pharmacy_pos/core/widgets/toast_helper.dart';
 
 import '../../../../core/animations/animations.dart';
 import '../../../../core/config/routes/app_router.dart';
@@ -267,21 +268,8 @@ class _LoginScreenState extends State<SignUpPage>
 
   void _handleStateChanges(BuildContext context, SignUpState state) {
     if (state is SignUpSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: const [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 8),
-              Text('Account created successfully!'),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          margin: ResponsiveHelper.getResponsivePadding(context),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
+      motionSnackBarSuccess(context, 'Account created successfully!');
+      context.push(AppRouter.kLogin);
     } else if (state is SignUpError) {
       _showErrorAnimation();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -329,8 +317,6 @@ class _LoginScreenState extends State<SignUpPage>
       padding: EdgeInsets.all(cardPadding),
       child: BlocBuilder<SignUpCubit, SignUpState>(
         builder: (context, state) {
-          _updateControllers(state);
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -418,38 +404,6 @@ class _LoginScreenState extends State<SignUpPage>
     );
   }
 
-  void _updateControllers(SignUpState state) {
-    if (state is SignUpInitial ||
-        state is SignUpError ||
-        state is SignUpValidationError) {
-      final email = state is SignUpInitial
-          ? state.email
-          : state is SignUpError
-          ? state.email
-          : (state as SignUpValidationError).email;
-      final password = state is SignUpInitial
-          ? state.password
-          : state is SignUpError
-          ? state.password
-          : (state as SignUpValidationError).password;
-      final confirmPassword = state is SignUpInitial
-          ? state.confirmPassword
-          : state is SignUpError
-          ? state.confirmPassword
-          : (state as SignUpValidationError).confirmPassword;
-
-      if (_emailController.text != email) {
-        _emailController.text = email;
-      }
-      if (_passwordController.text != password) {
-        _passwordController.text = password;
-      }
-      if (_confirmPasswordController.text != confirmPassword) {
-        _confirmPasswordController.text = confirmPassword;
-      }
-    }
-  }
-
   Widget _buildEmailField(BuildContext context, SignUpState state) {
     String? errorText;
     if (state is SignUpValidationError) {
@@ -458,8 +412,7 @@ class _LoginScreenState extends State<SignUpPage>
 
     return EmailField(
       controller: _emailController,
-      onChanged: (value) => context.read<SignUpCubit>().updateEmail(value),
-      onSubmitted: () => context.read<SignUpCubit>().signUp(),
+
       errorSlideAnimation: _errorSlideAnimation,
       errorText: errorText,
     );
@@ -479,9 +432,7 @@ class _LoginScreenState extends State<SignUpPage>
         PasswordField(
           label: 'Password',
           controller: _passwordController,
-          onChanged: (value) =>
-              context.read<SignUpCubit>().updatePassword(value),
-          onSubmitted: context.read<SignUpCubit>().signUp,
+
           errorText: passwordError,
           errorSlideAnimation: _errorSlideAnimation,
         ),
@@ -490,9 +441,7 @@ class _LoginScreenState extends State<SignUpPage>
           label: 'Confirm Password',
           placeholder: 'Re-enter your password',
           controller: _confirmPasswordController,
-          onChanged: (value) =>
-              context.read<SignUpCubit>().updateConfirmPassword(value),
-          onSubmitted: context.read<SignUpCubit>().signUp,
+
           errorText: confirmPasswordError,
           errorSlideAnimation: _errorSlideAnimation,
         ),
@@ -505,7 +454,11 @@ class _LoginScreenState extends State<SignUpPage>
 
     return CustomButton(
       text: 'Sign Up',
-      onPressed: () => context.read<SignUpCubit>().signUp(),
+      onPressed: () => context.read<SignUpCubit>().signUp(
+        _emailController.text,
+        _passwordController.text,
+        _confirmPasswordController.text,
+      ),
       isLoading: isLoading,
     );
   }

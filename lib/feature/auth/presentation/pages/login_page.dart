@@ -309,7 +309,7 @@ motionSnackBarError(context, "Login failed: ${state.errorMessage}");
       padding: EdgeInsets.all(cardPadding),
       child: BlocBuilder<LoginCubit, LoginState>(
         builder: (context, state) {
-          _updateControllers(state);
+       
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,57 +404,30 @@ motionSnackBarError(context, "Login failed: ${state.errorMessage}");
     );
   }
 
-  void _updateControllers(LoginState state) {
-    if (state is LoginInitial ||
-        state is LoginError ||
-        state is LoginValidationError) {
-      final email = state is LoginInitial
-          ? state.email
-          : state is LoginError
-          ? state.email
-          : (state as LoginValidationError).email;
-      final password = state is LoginInitial
-          ? state.password
-          : state is LoginError
-          ? state.password
-          : (state as LoginValidationError).password;
-
-      if (_emailController.text != email) {
-        _emailController.text = email;
-      }
-      if (_passwordController.text != password) {
-        _passwordController.text = password;
-      }
-    }
-  }
 
   Widget _buildEmailField(BuildContext context, LoginState state) {
-    String? errorText;
-    if (state is LoginValidationError) {
-      errorText = state.emailError;
-    }
+   
+  
 
     return EmailField(
       controller: _emailController,
-      onChanged: (value) => context.read<LoginCubit>().updateEmail(value),
-      onSubmitted: () => context.read<LoginCubit>().signIn(),
+     
+      
       errorSlideAnimation: _errorSlideAnimation,
-      errorText: errorText,
+     
     );
   }
 
   Widget _buildPasswordField(BuildContext context, LoginState state) {
-    String? errorText;
-    if (state is LoginValidationError) {
-      errorText = state.passwordError;
-    }
+   
+ 
 
     return PasswordField(
       label: 'Password',
       controller: _passwordController,
-      onChanged: (value) => context.read<LoginCubit>().updatePassword(value),
-      onSubmitted: context.read<LoginCubit>().signIn,
-      errorText: errorText,
+    
+
+     
 
       errorSlideAnimation: _errorSlideAnimation,
     );
@@ -479,7 +452,10 @@ motionSnackBarError(context, "Login failed: ${state.errorMessage}");
 
     return CustomButton(
       text: 'Sign In',
-      onPressed: () => context.read<LoginCubit>().signIn(),
+      onPressed: () => context.read<LoginCubit>().signIn(
+         _emailController.text,
+         _passwordController.text,
+      ),
       isLoading: isLoading,
     );
   }

@@ -1,83 +1,17 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../data/helpers/firebase_helper.dart';
 import 'login_state.dart';
 
 class LoginCubit extends Cubit<LoginState> {
   LoginCubit() : super(const LoginInitial());
 
-  void updateEmail(String email) {
-    final currentState = state;
-    if (currentState is LoginInitial) {
-      emit(currentState.copyWith(email: email));
-    } else if (currentState is LoginError) {
-      emit(LoginInitial(
-        email: email,
-        password: currentState.password,
-     
-      ));
-    } else if (currentState is LoginValidationError) {
-      emit(LoginInitial(
-        email: email,
-        password: currentState.password,
-       
-      ));
-    }
-  }
-
-  void updatePassword(String password) {
-    final currentState = state;
-    if (currentState is LoginInitial) {
-      emit(currentState.copyWith(password: password));
-    } else if (currentState is LoginError) {
-      emit(LoginInitial(
-        email: currentState.email,
-        password: password,
-       
-      ));
-    } else if (currentState is LoginValidationError) {
-      emit(LoginInitial(
-        email: currentState.email,
-        password: password,
-      
-      ));
-    }
-  }
 
 
 
-  void signIn() async {
-    final currentState = state;
-    String email = '';
-    String password = '';
-   
-    
-    if (currentState is LoginInitial) {
-      email = currentState.email;
-      password = currentState.password;
-    
-    } else if (currentState is LoginError) {
-      email = currentState.email;
-      password = currentState.password;
-     
-    } else if (currentState is LoginValidationError) {
-      email = currentState.email;
-      password = currentState.password;
-    
-    }
 
-    // Validate inputs
-    final emailError = _validateEmail(email);
-    final passwordError = _validatePassword(password);
 
-    if (emailError != null || passwordError != null) {
-      emit(LoginValidationError(
-        email: email,
-        password: password,
-      
-        emailError: emailError,
-        passwordError: passwordError,
-      ));
-      return;
-    }
+
+  void signIn(String email, String password) async {
 
     // Start loading
     emit(LoginLoading(
@@ -87,34 +21,46 @@ class LoginCubit extends Cubit<LoginState> {
     ));
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Simulate login logic
-      if (email.isNotEmpty && password.isNotEmpty) {
-        // Simulate successful login
-        if (email == "mstfo23mr5@gmail.com" && password == "123456") {
-          emit(LoginSuccess(email: email, message: 'Login successful'));
-
-        }else{
-       
-          emit(LoginError(
-            email: email,
-            password: password,
-         
-            errorMessage: 'Invalid credentials',
-          ));
-        }
-        
-     
-      } else {
+      FirebaseHelper.signInWithEmailAndPassword(email, password).then((_) {
+        // Emit success state
+        emit(LoginSuccess(email: email, message: 'Login successful'));
+      }).catchError((error) {
+        // Emit error state
         emit(LoginError(
           email: email,
           password: password,
-       
-          errorMessage: 'Invalid credentials',
+
+          errorMessage: error.toString(),
         ));
-      }
+      });
+      // Simulate API call
+      // await Future.delayed(const Duration(seconds: 2));
+
+      // // Simulate login logic
+      // if (email.isNotEmpty && password.isNotEmpty) {
+      //   // Simulate successful login
+      //   if (email == "mstfo23mr5@gmail.com" && password == "123456") {
+      //     emit(LoginSuccess(email: email, message: 'Login successful'));
+
+      //   }else{
+       
+      //     emit(LoginError(
+      //       email: email,
+      //       password: password,
+         
+      //       errorMessage: 'Invalid credentials',
+      //     ));
+      //   }
+        
+     
+      // } else {
+      //   emit(LoginError(
+      //     email: email,
+      //     password: password,
+       
+      //     errorMessage: 'Invalid credentials',
+      //   ));
+      // }
     } catch (e) {
       emit(LoginError(
         email: email,
