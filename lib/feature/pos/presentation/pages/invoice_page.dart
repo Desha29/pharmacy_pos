@@ -30,6 +30,7 @@ class InvoicePage extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         child: BlocBuilder<InvoiceCubit, InvoiceState>(
           builder: (context, state) {
+            context.read<InvoiceCubit>().loadInvoices();
             return Column(
               children: [
                 Padding(
@@ -40,9 +41,7 @@ class InvoicePage extends StatelessWidget {
                         flex: 5,
                         child: SearchInput(
                           hintText: "Search invoices...",
-                          controller: TextEditingController(
-                            text: state.searchQuery,
-                          ),
+                          controller: state.searchController,
                           onChanged: (val) => context
                               .read<InvoiceCubit>()
                               .updateSearchQuery(val),
@@ -254,6 +253,32 @@ class InvoicePage extends StatelessWidget {
                                                     ),
                                                   ),
                                                 ),
+                                              ),
+                                              BlocBuilder<
+                                                InvoiceCubit,
+                                                InvoiceState
+                                              >(
+                                                builder: (context, state) {
+                                                  return Align(
+                                                    alignment: Alignment
+                                                        .bottomRight, // or Alignment.topRight
+                                                    child: Tooltip(
+                                                      message: invoice.isSynced
+                                                          ? "Synced"
+                                                          : "Not Synced",
+                                                      child: Icon(
+                                                        state.allInvoices[index].isSynced
+                                                            ? Icons.sync
+                                                            : Icons
+                                                                  .sync_disabled,
+                                                        color: invoice.isSynced
+                                                            ? Colors.green
+                                                            : Colors.redAccent,
+                                                        size: 24,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
                                               ),
                                             ],
                                           ),

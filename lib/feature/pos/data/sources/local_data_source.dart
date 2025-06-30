@@ -1,16 +1,14 @@
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class LocalDataSource {
   final Box invoiceBox = Hive.box('invoices');
   final Box productBox = Hive.box('products');
 
   Future<void> saveInvoice(Map<String, dynamic> invoice) async {
-  
     await invoiceBox.put(invoice['id'], invoice);
   }
 
   List<Map<String, dynamic>> getInvoices() {
-   
     return invoiceBox.values
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
@@ -27,12 +25,10 @@ class LocalDataSource {
   }
 
   List<Map<String, dynamic>> getUnsyncedInvoices() {
-   
     return getInvoices().where((i) => i['isSynced'] == false).toList();
   }
 
   List<Map<String, dynamic>> getProducts() {
-  
     return productBox.values
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
@@ -40,7 +36,6 @@ class LocalDataSource {
   }
 
   Future<void> updateProduct(String barcode, Map<String, dynamic> data) async {
-    
     await productBox.put(barcode, data);
   }
 
@@ -50,5 +45,11 @@ class LocalDataSource {
       return Map<String, dynamic>.from(item);
     }
     return null;
+  }
+
+  /// 🔥 Deletes all stored invoices and products from local Hive boxes
+  Future<void> clearAllData() async {
+    await invoiceBox.clear();
+    await productBox.clear();
   }
 }

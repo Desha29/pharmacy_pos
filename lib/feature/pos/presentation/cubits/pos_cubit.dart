@@ -1,7 +1,10 @@
 // 📁 pos_cubit.dart
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pharmacy_pos/core/widgets/toast_helper.dart';
 import 'package:pharmacy_pos/feature/pos/data/models/invoice_model.dart';
+import 'package:pharmacy_pos/feature/pos/presentation/cubits/invoice_cubit.dart';
 import 'package:synchronized/synchronized.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/tab_data.dart';
@@ -25,13 +28,11 @@ class PosCubit extends Cubit<PosState> {
     if (conn != ConnectivityResult.none) {
       try {
         final products = await remote.fetchProducts();
-        print("fetch  remote");
         for (var product in products) {
           await local.updateProduct(product['barcode'], product);
         }
-        print("update local");
       } catch (e) {
-        print('❌ Failed to fetch products: $e');
+        print('❌ Failed to fetch products: \$e');
       }
     }
     final localProducts = local.getProducts();
@@ -63,29 +64,110 @@ class PosCubit extends Cubit<PosState> {
     emit(state.copyWith(tabs: updatedTabs));
   }
 
-  void addToCart(int tabIndex, Map<String, dynamic> product) {
+  void addToCart(
+    int tabIndex,
+    Map<String, dynamic> product,
+    BuildContext context,
+  ) {
     final tabs = List<TabData>.from(state.tabs);
     final cart = List<Map<String, dynamic>>.from(tabs[tabIndex].cartItems);
+
+    final totalQtyInAllTabs = tabs.fold<int>(
+      0,
+      (sum, tab) =>
+          sum +
+          tab.cartItems
+              .where((item) => item['barcode'] == product['barcode'])
+              .fold(0, (s, i) => s + (i['quantity'] as int)),
+    );
+
+    final stock = product['stock'] ?? 0;
+
     final index = cart.indexWhere(
       (item) => item['barcode'] == product['barcode'],
     );
-    if (index != -1 && cart[index]['quantity']<cart[index]['stock']) {
-      cart[index]['quantity'] += 1;
+    if (totalQtyInAllTabs < stock) {
+      if (index != -1) {
+        cart[index]['quantity'] += 1;
+      } else {
+        cart.add({...product, 'quantity': 1});
+      }
+      tabs[tabIndex] = tabs[tabIndex].copyWith(cartItems: cart);
+      emit(state.copyWith(tabs: tabs));
     } else {
-      cart.add({...product, 'quantity': 1});
+      motionSnackBarError(
+        context,
+        "🚩 Cannot add more. Stock exceeded for \${product['barcode']}",
+      );
     }
-    tabs[tabIndex] = tabs[tabIndex].copyWith(cartItems: cart);
-    emit(state.copyWith(tabs: tabs));
   }
 
-  void increaseQuantity(int tabIndex, String barcode) {
+  Future<void> syncUnsyncedInvoices() async {
+    final conn = await Connectivity().checkConnectivity();
+    if (conn == ConnectivityResult.none) return;
+
+    final unsyncedInvoices = local.getUnsyncedInvoices()
+      ..sort(
+        (a, b) =>
+            DateTime.parse(a['date']).compareTo(DateTime.parse(b['date'])),
+      );
+
+    for (var invoice in unsyncedInvoices) {
+      try {
+        await remote.uploadInvoice(invoice);
+
+        for (var product in invoice['products']) {
+          await remote.updateProductStock(
+            product['barcode'],
+            product['quantity'],
+          );
+        }
+
+        await local.markAsSynced(invoice['id']);
+        print('✅ Synced invoice: ${invoice['id']}');
+      } catch (e) {
+        print('❌ Failed to sync invoice ${invoice['id']}: $e');
+      }
+    }
+  }
+
+  void startSyncListener() {
+    Connectivity().onConnectivityChanged.listen((result) async {
+      if (result != ConnectivityResult.none) {
+        print('🌐 Internet reconnected. Trying to sync...');
+        await syncUnsyncedInvoices();
+      }
+    });
+  }
+
+  void increaseQuantity(int tabIndex, String barcode, BuildContext context) {
     final tabs = List<TabData>.from(state.tabs);
     final cart = List<Map<String, dynamic>>.from(tabs[tabIndex].cartItems);
     final index = cart.indexWhere((item) => item['barcode'] == barcode);
-    if (index != -1&& cart[index]['quantity']<cart[index]['stock']) {
-      cart[index]['quantity'] += 1;
-      tabs[tabIndex] = tabs[tabIndex].copyWith(cartItems: cart);
-      emit(state.copyWith(tabs: tabs));
+
+    if (index != -1) {
+      final product = cart[index];
+      final stock = product['stock'] ?? 0;
+
+      final totalQtyInAllTabs = tabs.fold<int>(
+        0,
+        (sum, tab) =>
+            sum +
+            tab.cartItems
+                .where((item) => item['barcode'] == barcode)
+                .fold(0, (s, i) => s + (i['quantity'] as int)),
+      );
+
+      if (totalQtyInAllTabs < stock) {
+        cart[index]['quantity'] += 1;
+        tabs[tabIndex] = tabs[tabIndex].copyWith(cartItems: cart);
+        emit(state.copyWith(tabs: tabs));
+      } else {
+        motionSnackBarError(
+          context,
+          "🚩 Cannot increase. Stock exceeded for \$barcode",
+        );
+      }
     }
   }
 
@@ -125,15 +207,16 @@ class PosCubit extends Cubit<PosState> {
     emit(state.copyWith(tabs: updatedTabs));
   }
 
-  Future<void> checkout(int tabIndex) async {
+  Future<void> checkout(int tabIndex, BuildContext context) async {
     await _checkoutLock.synchronized(() async {
       try {
         final cartItems = state.tabs[tabIndex].cartItems;
+
         if (cartItems.isEmpty) {
-          print('Tab $tabIndex: Cart is empty.');
+          motionSnackBarError(context, "Tab $tabIndex: Cart is empty.");
           return;
         }
-
+ await invoiceRepository.fetchAllInvoices();
         final invoice = InvoiceModel(
           id: 'INV-${DateTime.now().millisecondsSinceEpoch}-$tabIndex',
           date: DateTime.now(),
@@ -141,11 +224,24 @@ class PosCubit extends Cubit<PosState> {
           total: getTotal(tabIndex),
         );
 
+        final connectivityResult = await Connectivity().checkConnectivity();
+
         await invoiceRepository.addInvoice(invoice);
         clearCart(tabIndex);
+        if (connectivityResult.last != ConnectivityResult.none) {
+          await invoiceRepository.syncInvoices();
+          motionSnackBarSuccess(context, "Checkout synced successfully ✅");
+        } else {
+          motionSnackBarSuccess(
+            context,
+            "Checkout saved offline. Will sync later 📴",
+          );
+        }
+
         initializeProducts();
-        print('Tab $tabIndex: Invoice saved.');
+      await invoiceRepository.fetchAllInvoices();
       } catch (e, s) {
+        motionSnackBarError(context, "Checkout failed ❌: $e");
         print('Tab $tabIndex: Invoice failed. $e\n$s');
       }
     });

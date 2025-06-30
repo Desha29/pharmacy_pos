@@ -13,38 +13,44 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   InvoiceRepositoryImpl(this.local, this.remote);
 
   @override
-  Future<void> addInvoice(InvoiceModel invoice) async {
-    final json = invoice.toJson();
-    json['isSynced'] = false;
+ @override
+Future<void> addInvoice(InvoiceModel invoice) async {
+  final json = invoice.toJson();
+  final connectivityResult = await Connectivity().checkConnectivity();
 
-    // // MINUS stock locally first (offline-first behavior)
-    for (var product in invoice.products) {
-      final localProd = await local.getProductByBarcode(product.barcode);
-      if (localProd != null) {
-        final updatedStock = (localProd['stock'] ?? 0) - product.quantity;
-        await local.updateProduct(product.barcode, {
-          ...localProd,
-          'stock': updatedStock < 0 ? 0 : updatedStock,
-        });
-      }
-    }
 
-    await local.saveInvoice(json);
+  json['isSynced'] = false;
+  await local.saveInvoice(json);
 
-   
-   final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult != ConnectivityResult.none) {
-      try {
-        await remote.uploadInvoice(json);
-        for (var product in invoice.products) {
-          await remote.updateProductStock(product.barcode, product.quantity);
-        }
-        await local.markAsSynced(json['id']);
-      } on FirebaseException catch (e) {
-        print(e.message);
-      }
+  
+  for (var product in invoice.products) {
+    final localProd = await local.getProductByBarcode(product.barcode);
+    if (localProd != null) {
+      final updatedStock = (localProd['stock'] ?? 0) - product.quantity;
+      await local.updateProduct(product.barcode, {
+        ...localProd,
+        'stock': updatedStock < 0 ? 0 : updatedStock,
+      });
     }
   }
+
+  
+  if (connectivityResult.last != ConnectivityResult.none) {
+    try {
+      await remote.uploadInvoice(json);
+      for (var product in invoice.products) {
+        await remote.updateProductStock(product.barcode, product.quantity);
+      }
+      await local.markAsSynced(json['id']);
+      print('✅ Invoice synced to Firestore');
+    } catch (e) {
+      print('❌ Firestore sync failed, will retry later: $e');
+    }
+  } else {
+    print('📴 Offline: invoice will sync when back online');
+  }
+  
+}
 
   @override
   Future<List<InvoiceModel>> fetchAllInvoices() async {
@@ -137,9 +143,9 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
           );
         }
 
-        print('✅ Invoice ${invoice['id']} synced with concurrency safety.');
+        print(' Invoice ${invoice['id']} synced with concurrency safety.');
       } catch (e) {
-        print('❌ Sync failure for invoice ${invoice['id']}: $e');
+        print(' Sync failure for invoice ${invoice['id']}: $e');
       }
     }
   }

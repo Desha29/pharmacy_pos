@@ -13,7 +13,7 @@ abstract class AppRouter {
 
   static final router = GoRouter(
     routes: [
-      GoRoute(path: '/', builder: (context, state) => PharmacyDashboard()),
+      GoRoute(path: '/', builder: (context, state) => LoginPage()),
       GoRoute(path: kSignUp, builder: (context, state) => const SignUpPage()),
       GoRoute(path: kLogin, builder: (context, state) => const LoginPage()),
       GoRoute(

@@ -233,7 +233,7 @@ class CartPanel extends StatelessWidget {
                 label: const FittedBox(child: Text('Checkout')),
                 onPressed: () {
                   final currentState = context.read<PosCubit>().state;
-                  context.read<PosCubit>().checkout(currentState.activeTabIndex);
+                  context.read<PosCubit>().checkout(currentState.activeTabIndex,context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,

@@ -6,7 +6,7 @@ import '../cubits/pos_cubit.dart';
 import '../cubits/pos_state.dart';
 import '../widgets/product_grid_loader.dart';
 import '../widgets/search_input.dart';
-import '../widgets/product_grid.dart';
+
 import '../widgets/cart_panel.dart';
 
 class SalesPOSPage extends StatelessWidget {
@@ -115,7 +115,7 @@ class SalesPOSPage extends StatelessWidget {
                                 searchQuery: tab.searchQuery,
                                 onAddToCart: (product) => context
                                     .read<PosCubit>()
-                                    .addToCart(state.activeTabIndex, product),
+                                    .addToCart(state.activeTabIndex, product,context),
                               ),
                             ),
                           ],
@@ -136,6 +136,7 @@ class SalesPOSPage extends StatelessWidget {
                                 context.read<PosCubit>().increaseQuantity(
                                   state.activeTabIndex,
                                   barcode,
+                                  context
                                 ),
                             onDecrease: (barcode) =>
                                 context.read<PosCubit>().decreaseQuantity(
@@ -206,7 +207,7 @@ class SalesPOSPage extends StatelessWidget {
                     context.read<PosCubit>().removeFromCart(tabIndex, barcode),
                 onIncrease: (barcode) => context
                     .read<PosCubit>()
-                    .increaseQuantity(tabIndex, barcode),
+                    .increaseQuantity(tabIndex, barcode,context),
                 onDecrease: (barcode) => context
                     .read<PosCubit>()
                     .decreaseQuantity(tabIndex, barcode),

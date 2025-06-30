@@ -4,6 +4,7 @@ import '../../../../core/animations/animations.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/responsive/responsive_layout.dart';
 import '../../../../core/theme/text_styles.dart';
+import '../../data/sources/local_data_source.dart';
 
 class Header extends StatefulWidget {
   final String activeNavItem;
@@ -110,7 +111,8 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  "admin@pharmpos.com",
+                                  
+                                  "user@pharmpos.com",
                                   style: AppStyles.bodySmall,
                                 ),
                               ],
@@ -139,6 +141,7 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
   }
 
   void _toggleUserMenu({bool? forceClose}) {
+   LocalDataSource().clearAllData();
     final shouldShow = forceClose == true ? false : !_showUserMenu;
     setState(() {
       _showUserMenu = shouldShow;
@@ -194,7 +197,11 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
                             child: const SizedBox(
                               width: 40,
                               height: 40,
-                              child: Icon(Icons.menu, size: 20, color: AppColors.textSecondary),
+                              child: Icon(
+                                Icons.menu,
+                                size: 20,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           ),
                         ),
@@ -220,7 +227,6 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
             ),
           ),
 
-        
           Expanded(
             flex: 3,
             child: Align(
@@ -231,7 +237,6 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
                   spacing: isMobile ? 12 : 20,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                 
                     TweenAnimationBuilder<double>(
                       duration: const Duration(seconds: 2),
                       tween: Tween(begin: 0.0, end: 1.0),
@@ -245,12 +250,11 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
                             color: AppColors.cardBackground,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: ConnectionStatusIndicator()
+                          child: ConnectionStatusIndicator(),
                         );
                       },
                     ),
 
-                 
                     CompositedTransformTarget(
                       link: _layerLink,
                       child: InkWell(
@@ -265,7 +269,7 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            "A",
+                            "U",
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,

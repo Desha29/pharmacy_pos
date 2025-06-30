@@ -30,11 +30,11 @@ class InvoiceCubit extends Cubit<InvoiceState> {
             await remote.uploadInvoice(invoice);
             await local.markAsSynced(invoice['id']);
           } catch (e) {
-            print('❌ Sync failed for invoice ${invoice['id']}: $e');
+            print(' Sync failed for invoice ${invoice['id']}: $e');
           }
         }
       } catch (e) {
-        print('❌ Failed to initialize invoices: $e');
+        print(' Failed to initialize invoices: $e');
       }
     }
 
@@ -59,7 +59,10 @@ class InvoiceCubit extends Cubit<InvoiceState> {
     emit(state.copyWith(sortBy: sortBy));
     _applyFilters();
   }
-
+Future<void> refreshApp() async {
+    emit(InvoiceState.initial([]));
+    await initializeInvoices();
+  }
   void selectInvoice(InvoiceModel? invoice) {
     emit(state.copyWith(selectedInvoice: invoice));
   }

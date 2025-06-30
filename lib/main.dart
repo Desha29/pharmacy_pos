@@ -21,10 +21,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-  );
+
   await initializeApp();
 
   final local = LocalDataSource();
@@ -61,13 +58,19 @@ class MyApp extends StatelessWidget {
             localDataSource,
           )..initializeInvoices(),
         ),
-        BlocProvider(
-          create: (_) => PosCubit(
-            invoiceRepository,
-            remoteDataSource,
-            localDataSource,
-          )..initializeProducts(),
-        ),
+BlocProvider(
+  create: (_) {
+    final cubit = PosCubit(
+      invoiceRepository,
+      remoteDataSource,
+      localDataSource,
+    );
+    cubit.startSyncListener(); // Start background sync listener
+    cubit.initializeProducts(); // Optional: load products on start
+    return cubit;
+  },
+),
+
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
