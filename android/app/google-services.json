@@ -12,7 +12,12 @@
           "package_name": "com.example.pharmacy_pos"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "187325753352-27kp7acl60f9j3pr321rdt6d41333lvs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB5JhBc7dnBetmkodd2Jbvo-M-dB-_FOdA"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "187325753352-27kp7acl60f9j3pr321rdt6d41333lvs.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "187325753352-2ckjndhjc5tqnhj7ausbmp0mn010m66b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pharmacyPos"
+              }
+            }
+          ]
         }
       }
     }

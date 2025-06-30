@@ -1,13 +1,55 @@
-
-
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../data/models/invoice_model.dart';
-import '../../data/models/product_model.dart';
+import '../../domain/repositories/invoice_repository.dart';
 import 'invoice_state.dart';
+import '../../data/sources/local_data_source.dart';
+import '../../data/sources/remote_data_source.dart';
+
 
 class InvoiceCubit extends Cubit<InvoiceState> {
-  InvoiceCubit() : super(InvoiceState.initial(_dummyInvoices()));
+  final InvoiceRepository repository;
+  final RemoteDataSource remote;
+  final LocalDataSource local;
 
+  InvoiceCubit(this.repository, this.remote, this.local)
+      : super(InvoiceState.initial([]));
+
+  Future<void> initializeInvoices() async {
+    final conn = await Connectivity().checkConnectivity();
+    if (conn != ConnectivityResult.none) {
+      try {
+        final invoices = await remote.fetchInvoices();
+        for (var invoice in invoices) {
+          await local.saveInvoice({...invoice, 'isSynced': true});
+        }
+
+        final unsynced = local.getUnsyncedInvoices();
+        for (var invoice in unsynced) {
+          try {
+            await remote.uploadInvoice(invoice);
+            await local.markAsSynced(invoice['id']);
+          } catch (e) {
+            print('❌ Sync failed for invoice ${invoice['id']}: $e');
+          }
+        }
+      } catch (e) {
+        print('❌ Failed to initialize invoices: $e');
+      }
+    }
+
+    loadInvoices();
+  }
+
+  Future<void> loadInvoices() async {
+    final invoices = await repository.fetchAllInvoices();
+    emit(state.copyWith(allInvoices: invoices, filteredInvoices: invoices));
+  }
+
+  Future<void> syncInvoices() async {
+    await repository.syncInvoices();
+    loadInvoices(); 
+  }
   void updateSearchQuery(String query) {
     emit(state.copyWith(searchQuery: query));
     _applyFilters();
@@ -28,7 +70,8 @@ class InvoiceCubit extends Cubit<InvoiceState> {
     if (state.searchQuery.isNotEmpty) {
       temp = temp.where((inv) {
         return inv.id.toLowerCase().contains(state.searchQuery.toLowerCase()) ||
-            inv.products.any((p) => p.name.toLowerCase().contains(state.searchQuery.toLowerCase()));
+            inv.products.any((p) =>
+                p.name.toLowerCase().contains(state.searchQuery.toLowerCase()));
       }).toList();
     }
 
@@ -48,30 +91,5 @@ class InvoiceCubit extends Cubit<InvoiceState> {
     }
 
     emit(state.copyWith(filteredInvoices: temp));
-  }
-
-  static List<InvoiceModel> _dummyInvoices() {
-    return List.generate(6, (i) {
-      return InvoiceModel(
-        id: 'INV-20240${i + 1}',
-        date: DateTime.now().subtract(Duration(days: i * 2)),
-        products: [
-          ProductModel(
-            name: 'Panadol Extra',
-            price: 25.0,
-            barcode: 'BC100$i',
-            company: 'Pharma Co.',
-            quantity: 2,
-          ),
-          ProductModel(
-            name: 'Vitamin C',
-            price: 10.0,
-            barcode: 'BC200$i',
-            company: 'Health Inc.',
-            quantity: 1,
-          ),
-        ],
-      );
-    });
   }
 }

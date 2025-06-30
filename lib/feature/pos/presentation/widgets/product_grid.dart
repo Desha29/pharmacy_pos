@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pharmacy_pos/feature/pos/data/models/product_model.dart';
+import '../../data/models/product_model.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/text_styles.dart';
 import '../../../../core/responsive/responsive_layout.dart';
@@ -7,41 +7,34 @@ import '../../../../core/responsive/responsive_layout.dart';
 class ProductGrid extends StatelessWidget {
   final String searchQuery;
   final Function(Map<String, dynamic>) onAddToCart;
+  final List<ProductModel> products;
 
   const ProductGrid({
     super.key,
     required this.searchQuery,
     required this.onAddToCart,
+    required this.products,
   });
 
   @override
   Widget build(BuildContext context) {
     final spacing = ResponsiveHelper.getResponsiveSpacing(context, 10);
     final aspectRatio = 0.7;
-
     final crossAxisCount = ResponsiveHelper.isMobile(context)
         ? 2
         : ResponsiveHelper.isTablet(context)
         ? 2
         : 3;
 
-    final products =
-        List.generate(50, (index) {
-          return ProductModel(
-            name: 'Medicine #$index 500mg Extra Strength Pain Reliever',
-            price: (index + 1) * 3.75,
-            barcode: 'BC000$index',
-            company: 'Pharma Co.',
-            imageUrl: 'assets/images/medicine.jpg',
-          );
-        }).where((p) {
-          final name = (p.name).toString().toLowerCase();
-          final barcode = (p.barcode).toString().toLowerCase();
-          return name.contains(searchQuery) || barcode.contains(searchQuery);
-        }).toList();
+    final filtered = products.where((p) {
+      final name = p.name.toLowerCase();
+      final barcode = p.barcode.toLowerCase();
+      return name.contains(searchQuery.toLowerCase()) ||
+          barcode.contains(searchQuery.toLowerCase());
+    }).toList();
 
     return GridView.builder(
-      itemCount: products.length,
+      itemCount: filtered.length,
       padding: EdgeInsets.all(spacing),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
@@ -50,18 +43,16 @@ class ProductGrid extends StatelessWidget {
         childAspectRatio: aspectRatio,
       ),
       itemBuilder: (context, index) {
-        final product = products[index];
-        return ProductCardMap(product: {
-          'name': product.name,
-          'price': product.price,
-          'barcode': product.barcode,
-          'company': product.company,
-          'imageUrl': product.imageUrl,
-        }, onAddToCart: onAddToCart);
+        final product = filtered[index];
+        return ProductCardMap(
+          product: product.toJson(),
+          onAddToCart: onAddToCart,
+        );
       },
     );
   }
 }
+
 class ProductCardMap extends StatelessWidget {
   final Map<String, dynamic> product;
   final Function(Map<String, dynamic>) onAddToCart;
@@ -77,9 +68,8 @@ class ProductCardMap extends StatelessWidget {
     final fontSize = ResponsiveHelper.getResponsiveFontSize(context, 16);
     final priceFontSize = ResponsiveHelper.getResponsiveFontSize(context, 15);
     final smallFontSize = ResponsiveHelper.getResponsiveFontSize(context, 13);
-    final spacing = ResponsiveHelper.getResponsiveSpacing(context, 16);
+
     final padding = ResponsiveHelper.getResponsiveSpacing(context, 12);
-    
 
     return Material(
       elevation: 3,
@@ -95,31 +85,33 @@ class ProductCardMap extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-                          Flexible(
-                    child: FittedBox(
-                      child: ClipRRect(
-                     
-                        borderRadius: BorderRadius.circular(24),
+            Flexible(
+              child: FittedBox(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    height: 300,
+                    width: 600,
+                    product['imageUrl'],
+                    errorBuilder: (context, error, stackTrace) {
+                      return ClipRRect(
+                         borderRadius: BorderRadius.circular(24),
                         child: Image.asset(
-                          height: 300,
-                         width: 600,
-                          product['imageUrl'] ?? 'assets/images/p1.jpg',
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.image, size: 50, color: AppColors.textSecondary);
-                          },
                           fit: BoxFit.cover,
-                          
-                        ),
-                      ),
-                    ),
+                            height: 400,
+                                            width: 800,
+                          'assets/images/medicine.jpg'),
+                      );
+                    },
+                    fit: BoxFit.cover,
                   ),
+                ),
+              ),
+            ),
             Expanded(
               child: Column(
-                spacing: spacing / 2,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
-    
                   Expanded(
                     flex: 2,
                     child: Text(
@@ -132,10 +124,19 @@ class ProductCardMap extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-
                   Flexible(
                     child: Text(
                       'Barcode: ${product['barcode']}',
+                      style: AppStyles.caption.copyWith(
+                        fontSize: smallFontSize,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Flexible(
+                    child: Text(
+                      'Stock: ${product['stock']}',
                       style: AppStyles.caption.copyWith(
                         fontSize: smallFontSize,
                       ),
@@ -156,7 +157,6 @@ class ProductCardMap extends StatelessWidget {
                 ],
               ),
             ),
-
             FittedBox(
               child: ElevatedButton.icon(
                 onPressed: () => onAddToCart(product),

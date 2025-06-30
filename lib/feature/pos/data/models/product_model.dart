@@ -1,45 +1,42 @@
-
-
 class ProductModel {
+  final String barcode;
   final String name;
   final double price;
-  final String barcode;
+  final int quantity;
   final String company;
-  final String? imageUrl; 
-  int quantity;
-  int stock ; // Default stock value
+  final int stock;
+  final String? imageUrl;
 
   ProductModel({
+    required this.barcode,
     required this.name,
     required this.price,
-    required this.barcode,
+    required this.quantity,
     required this.company,
-    this.quantity = 1,
-    this.stock = 0, 
+    required this.stock,
     this.imageUrl,
   });
 
-  factory ProductModel.fromMap(Map<String, dynamic> map) {
-    return ProductModel(
-      name: map['name'],
-      price: map['price'],
-      barcode: map['barcode'],
-      company: map['company'],
-      quantity: map['quantity'] ?? 1,
-      stock: map['stock'] ?? 0, 
-      imageUrl: map['imageUrl'],
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    'barcode': barcode,
+    'name': name,
+    'price': price,
+    'quantity': quantity,
+    'company': company,
+    'stock': stock,
+    'imageUrl': imageUrl, 
+  };
 
-  Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'price': price,
-      'barcode': barcode,
-      'company': company,
-      'quantity': quantity,
-      'stock': stock, 
-      'imageUrl': imageUrl,
-    };
-  }
+factory ProductModel.fromJson(Map<String, dynamic> json) {
+  return ProductModel(
+    name: json['name'] ?? '',
+    price: (json['price'] as num?)?.toDouble() ?? 0.0,
+    barcode: json['barcode'] ?? '',
+    company: json['company'] ?? '',
+    stock: json['stock'] ?? 0,
+    quantity: json['quantity'] ?? 0,
+    imageUrl: json['imageUrl'] ?? 'assets/images/medicine.jpg',
+  );
+}
+
 }

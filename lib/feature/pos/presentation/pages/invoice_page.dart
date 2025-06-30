@@ -48,9 +48,8 @@ class InvoicePage extends StatelessWidget {
                               .updateSearchQuery(val),
                         ),
                       ),
-                  
+
                       Expanded(
-                        
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -165,7 +164,7 @@ class InvoicePage extends StatelessWidget {
                                                   style: AppStyles.heading3,
                                                 ),
                                               ),
-                                              SizedBox(height: spacing/2),
+                                              SizedBox(height: spacing / 2),
                                               FittedBox(
                                                 fit: BoxFit.scaleDown,
                                                 child: Text(
@@ -173,7 +172,7 @@ class InvoicePage extends StatelessWidget {
                                                   style: AppStyles.caption,
                                                 ),
                                               ),
-                                              SizedBox(height: spacing/2),
+                                              SizedBox(height: spacing / 2),
                                               FittedBox(
                                                 fit: BoxFit.scaleDown,
                                                 child: Text(
@@ -181,7 +180,7 @@ class InvoicePage extends StatelessWidget {
                                                   style: AppStyles.caption,
                                                 ),
                                               ),
-                                              SizedBox(height: spacing/2),
+                                              SizedBox(height: spacing / 2),
                                               FittedBox(
                                                 fit: BoxFit.scaleDown,
                                                 child: Text(
@@ -195,7 +194,7 @@ class InvoicePage extends StatelessWidget {
                                                       ),
                                                 ),
                                               ),
-                                              SizedBox(height: spacing/2),
+                                              SizedBox(height: spacing / 2),
                                               ConstrainedBox(
                                                 constraints:
                                                     const BoxConstraints(
@@ -205,14 +204,29 @@ class InvoicePage extends StatelessWidget {
                                                 child: FittedBox(
                                                   fit: BoxFit.scaleDown,
                                                   child: ElevatedButton.icon(
-                                                    style:
-                                                        ElevatedButton.styleFrom(
-                                                          backgroundColor:
-                                                              AppColors
-                                                                  .primaryBlue,
-                                                          foregroundColor:
-                                                              Colors.white,
-                                                        ),
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor:
+                                                          AppColors.primaryBlue,
+                                                      foregroundColor:
+                                                          Colors.white,
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 12,
+                                                            vertical: 8,
+                                                          ),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                      ),
+                                                      textStyle:
+                                                          const TextStyle(
+                                                            fontSize: 13,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                    ),
                                                     onPressed: () {
                                                       if (isMobile ||
                                                           isTablet) {
@@ -237,9 +251,6 @@ class InvoicePage extends StatelessWidget {
                                                     ),
                                                     label: const Text(
                                                       "Details",
-                                                      style: TextStyle(
-                                                        fontSize: 13,
-                                                      ),
                                                     ),
                                                   ),
                                                 ),
@@ -346,12 +357,12 @@ class InvoicePage extends StatelessWidget {
               color: AppColors.primaryBlue,
             ),
           ),
-          const SizedBox(height: 12),
-          TextButton.icon(
-            onPressed: () => context.read<InvoiceCubit>().selectInvoice(null),
-            icon: const Icon(Icons.close, color: Colors.red),
-            label: const Text('Close', style: TextStyle(color: Colors.red)),
-          ),
+          // const SizedBox(height: 12),
+          // TextButton.icon(
+          //   onPressed: () => context.read<InvoiceCubit>().selectInvoice(null),
+          //   icon: const Icon(Icons.close, color: Colors.red),
+          //   label: const Text('Close', style: TextStyle(color: Colors.red)),
+          // ),
         ],
       ),
     );
@@ -371,11 +382,16 @@ class InvoicePage extends StatelessWidget {
       ),
       builder: (_) {
         final isTablet = ResponsiveHelper.isTablet(context);
+        final screenHeight = MediaQuery.of(context).size.height;
+
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: spacing),
           child: SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: BoxConstraints(),
+              constraints: BoxConstraints(
+                minHeight: 0,
+                maxHeight: screenHeight * 0.9,
+              ),
               child: _buildInvoiceDetailPanel(
                 context,
                 spacing,

@@ -4,6 +4,7 @@ import '../../../../core/responsive/responsive_layout.dart';
 import '../../data/models/tab_data.dart';
 import '../cubits/pos_cubit.dart';
 import '../cubits/pos_state.dart';
+import '../widgets/product_grid_loader.dart';
 import '../widgets/search_input.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/cart_panel.dart';
@@ -38,21 +39,34 @@ class SalesPOSPage extends StatelessWidget {
                           children: List.generate(state.tabs.length, (index) {
                             final isActive = index == state.activeTabIndex;
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
                               child: GestureDetector(
-                                onTap: () => context.read<PosCubit>().switchTab(index),
+                                onTap: () =>
+                                    context.read<PosCubit>().switchTab(index),
                                 child: Chip(
                                   label: Text("POS ${index + 1}"),
-                                  backgroundColor:
-                                      isActive ? Colors.blue.shade100 : Colors.grey.shade200,
+                                  backgroundColor: isActive
+                                      ? Colors.blue.shade100
+                                      : Colors.grey.shade200,
                                   labelStyle: TextStyle(
-                                    color: isActive ? Colors.blue : Colors.black87,
+                                    color: isActive
+                                        ? Colors.blue
+                                        : Colors.black87,
                                   ),
-                                  deleteIcon: index != 0 && state.tabs.length > 1
-                                      ? const Icon(Icons.close, color: Colors.red, size: 18)
+                                  deleteIcon:
+                                      index != 0 && state.tabs.length > 1
+                                      ? const Icon(
+                                          Icons.close,
+                                          color: Colors.red,
+                                          size: 18,
+                                        )
                                       : null,
                                   onDeleted: index != 0 && state.tabs.length > 1
-                                      ? () => context.read<PosCubit>().removeTab(index)
+                                      ? () => context
+                                            .read<PosCubit>()
+                                            .removeTab(index)
                                       : null,
                                 ),
                               ),
@@ -63,7 +77,10 @@ class SalesPOSPage extends StatelessWidget {
                     ),
                     IconButton(
                       onPressed: () => context.read<PosCubit>().addNewTab(),
-                      icon: const Icon(Icons.add_circle_outline, color: Colors.green),
+                      icon: const Icon(
+                        Icons.add_circle_outline,
+                        color: Colors.green,
+                      ),
                     ),
                   ],
                 ),
@@ -87,14 +104,14 @@ class SalesPOSPage extends StatelessWidget {
                               controller: tab.searchController,
                               onChanged: (value) {
                                 context.read<PosCubit>().updateSearchQuery(
-                                      state.activeTabIndex,
-                                      value,
-                                    );
+                                  state.activeTabIndex,
+                                  value,
+                                );
                               },
                             ),
                             SizedBox(height: spacing),
                             Expanded(
-                              child: ProductGrid(
+                              child: ProductGridLoader(
                                 searchQuery: tab.searchQuery,
                                 onAddToCart: (product) => context
                                     .read<PosCubit>()
@@ -115,12 +132,16 @@ class SalesPOSPage extends StatelessWidget {
                             onRemove: (barcode) => context
                                 .read<PosCubit>()
                                 .removeFromCart(state.activeTabIndex, barcode),
-                            onIncrease: (barcode) => context
-                                .read<PosCubit>()
-                                .increaseQuantity(state.activeTabIndex, barcode),
-                            onDecrease: (barcode) => context
-                                .read<PosCubit>()
-                                .decreaseQuantity(state.activeTabIndex, barcode),
+                            onIncrease: (barcode) =>
+                                context.read<PosCubit>().increaseQuantity(
+                                  state.activeTabIndex,
+                                  barcode,
+                                ),
+                            onDecrease: (barcode) =>
+                                context.read<PosCubit>().decreaseQuantity(
+                                  state.activeTabIndex,
+                                  barcode,
+                                ),
                           ),
                         ),
                       ] else ...[
@@ -129,12 +150,21 @@ class SalesPOSPage extends StatelessWidget {
                           child: FittedBox(
                             child: ElevatedButton.icon(
                               onPressed: () {
-                                _showCartBottomSheet(context, tab, state.activeTabIndex);
+                                _showCartBottomSheet(
+                                  context,
+                                  tab,
+                                  state.activeTabIndex,
+                                );
                               },
-                              icon: FittedBox(child: const Icon(Icons.shopping_cart)),
+                              icon: FittedBox(
+                                child: const Icon(Icons.shopping_cart),
+                              ),
                               label: FittedBox(child: const Text("Open Cart")),
                               style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 6,
+                                ),
                                 backgroundColor: Colors.blue,
                                 foregroundColor: Colors.white,
                               ),
@@ -155,11 +185,10 @@ class SalesPOSPage extends StatelessWidget {
 
   void _showCartBottomSheet(BuildContext context, TabData tab, int tabIndex) {
     showModalBottomSheet(
-
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      
+
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -175,10 +204,12 @@ class SalesPOSPage extends StatelessWidget {
                 cartItems: tab.cartItems,
                 onRemove: (barcode) =>
                     context.read<PosCubit>().removeFromCart(tabIndex, barcode),
-                onIncrease: (barcode) =>
-                    context.read<PosCubit>().increaseQuantity(tabIndex, barcode),
-                onDecrease: (barcode) =>
-                    context.read<PosCubit>().decreaseQuantity(tabIndex, barcode),
+                onIncrease: (barcode) => context
+                    .read<PosCubit>()
+                    .increaseQuantity(tabIndex, barcode),
+                onDecrease: (barcode) => context
+                    .read<PosCubit>()
+                    .decreaseQuantity(tabIndex, barcode),
               ),
             ),
           ),

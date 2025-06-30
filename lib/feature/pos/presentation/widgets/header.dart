@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pharmacy_pos/feature/pos/presentation/widgets/connection_status_Indicator.dart';
 import '../../../../core/animations/animations.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/responsive/responsive_layout.dart';
@@ -244,35 +245,7 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
                             color: AppColors.cardBackground,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 1000),
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: AppColors.success,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.success.withOpacity(0.5 * value),
-                                      blurRadius: 4 * value,
-                                      spreadRadius: 2 * value,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Online",
-                                style: ResponsiveHelper.getResponsiveTextStyle(
-                                  context,
-                                  AppStyles.bodySmall,
-                                ),
-                              ),
-                            ],
-                          ),
+                          child: ConnectionStatusIndicator()
                         );
                       },
                     ),
