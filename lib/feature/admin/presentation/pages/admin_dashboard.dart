@@ -8,24 +8,28 @@ import '../../../../core/animations/animations.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/responsive/responsive_layout.dart';
 import '../../../../core/theme/text_styles.dart';
+
 import '../../../auth/data/helpers/firebase_helper.dart';
-import 'inventory_page.dart';
-import 'invoice_page.dart';
-import 'sales_pos_page.dart';
+import '../../../pos/presentation/widgets/animated_page_transition.dart';
+import '../../../pos/presentation/widgets/dashboard_content.dart';
+import '../../../pos/presentation/widgets/header.dart';
+import '../../../pos/presentation/widgets/sidebar.dart';
 
-import '../widgets/sidebar.dart';
-import '../widgets/header.dart';
-import '../widgets/dashboard_content.dart';
-import '../widgets/animated_page_transition.dart';
 
-class PharmacyDashboard extends StatefulWidget {
-  const PharmacyDashboard({super.key});
+// Admin-specific pages
+import 'admin_inventory_page.dart';
+import 'admin_invoice_page.dart';
+
+import 'settings_page.dart';
+
+class AdminDashboard extends StatefulWidget {
+  const AdminDashboard({super.key});
 
   @override
-  State<PharmacyDashboard> createState() => _PharmacyDashboardState();
+  State<AdminDashboard> createState() => _AdminDashboardState();
 }
 
-class _PharmacyDashboardState extends State<PharmacyDashboard>
+class _AdminDashboardState extends State<AdminDashboard>
     with TickerProviderStateMixin {
   String _activeNavItem = 'dashboard';
   bool _isSidebarCollapsed = false;
@@ -88,7 +92,7 @@ class _PharmacyDashboardState extends State<PharmacyDashboard>
                     children: [
                       // Header
                       Header(
-                        email: FirebaseHelper.getCurrentUser()?.email ?? "user@pharmpos.com",
+                        email: FirebaseHelper.getCurrentUser()?.email ?? "admin@pharmpos.com",
                         activeNavItem: _activeNavItem,
                         onToggleSidebar: _toggleSidebar,
                         isMobile: _isMobile,
@@ -203,30 +207,34 @@ class _PharmacyDashboardState extends State<PharmacyDashboard>
     );
   }
 
-  Widget _getActivePage() {
-    switch (_activeNavItem) {
-      case 'dashboard':
-        return DashboardContent(onNavigate: _setActiveNavItem);
-      case 'sales':
-        return const SalesPOSPage();
-      case 'inventory':
-        return const InventoryPage();
-      case 'invoices':
-        return const InvoicePage();
-      default:
-        return _buildPlaceholderContent();
-    }
+Widget _getActivePage() {
+  switch (_activeNavItem) {
+    case 'dashboard':
+      return DashboardContent(onNavigate: _setActiveNavItem);
+
+    case 'inventory': // 🔹 instead of reports
+      return  AdminInventoryPage();
+
+    case 'invoice': // 🔹 new invoice page
+      return const AdminInvoicePage();
+
+    case 'settings':
+      return const SettingsPage();
+
+    default:
+      return _buildPlaceholderContent();
   }
+}
+
 
   IconData _getModuleIcon(String navItem) {
     switch (navItem) {
-      case 'sales':
-        return Icons.point_of_sale;
-      case 'inventory':
-        return Icons.inventory_2;
-      case 'invoices':
-        return Icons.receipt_long;
-
+      case 'users':
+        return Icons.people;
+      case 'reports':
+        return Icons.bar_chart;
+      case 'settings':
+        return Icons.settings;
       default:
         return Icons.dashboard;
     }
@@ -236,9 +244,12 @@ class _PharmacyDashboardState extends State<PharmacyDashboard>
 
   String _getPageTitle(String navItem) {
     switch (navItem) {
-      case 'sales':
-        return 'Sales POS';
-
+      case 'users':
+        return 'Manage Users';
+      case 'reports':
+        return 'Reports';
+      case 'settings':
+        return 'Settings';
       default:
         return navItem[0].toUpperCase() + navItem.substring(1);
     }
@@ -269,7 +280,8 @@ class _PharmacyDashboardState extends State<PharmacyDashboard>
     });
   }
 
- void _handleLogout() async {
+
+void _handleLogout() async {
   // Small delay for animation consistency
   await Future.delayed(AnimationConstants.fast);
 
@@ -288,3 +300,5 @@ class _PharmacyDashboardState extends State<PharmacyDashboard>
   }
 }
 }
+
+

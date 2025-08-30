@@ -1,10 +1,11 @@
 // 📁 pos_cubit.dart
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter/material.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pharmacy_pos/core/widgets/toast_helper.dart';
 import 'package:pharmacy_pos/feature/pos/data/models/invoice_model.dart';
-import 'package:pharmacy_pos/feature/pos/presentation/cubits/invoice_cubit.dart';
+
 import 'package:synchronized/synchronized.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/tab_data.dart';
@@ -246,4 +247,37 @@ class PosCubit extends Cubit<PosState> {
       }
     });
   }
+  // Add these inside PosCubit, at the bottom
+
+Future<void> addProduct(ProductModel product) async {
+  try {
+    await local.updateProduct(product.barcode, product.toJson());
+    await remote.addProduct(product.toJson()); // backend create
+    await initializeProducts();
+  } catch (e) {
+    print("❌ Failed to add product: $e");
+  }
+}
+
+Future<void> updateProduct(ProductModel product) async {
+  try {
+    await local.updateProduct(product.barcode, product.toJson());
+    await remote.updateProduct(product.barcode, product.toJson()); 
+
+    await initializeProducts();
+  } catch (e) {
+    print("❌ Failed to update product: $e");
+  }
+}
+
+Future<void> removeProduct(ProductModel product) async {
+  try {
+    await local.deleteProduct(product.barcode);
+    await remote.deleteProduct(product.barcode); 
+    await initializeProducts();
+  } catch (e) {
+    print("❌ Failed to delete product: $e");
+  }
+}
+
 }

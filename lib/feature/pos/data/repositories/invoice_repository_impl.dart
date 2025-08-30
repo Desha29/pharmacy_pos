@@ -1,6 +1,4 @@
-// 📁 invoice_repository_impl.dart
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:pharmacy_pos/feature/pos/data/models/invoice_model.dart';
 import '../../domain/repositories/invoice_repository.dart';
 import '../sources/local_data_source.dart';
@@ -13,44 +11,41 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   InvoiceRepositoryImpl(this.local, this.remote);
 
   @override
- @override
-Future<void> addInvoice(InvoiceModel invoice) async {
-  final json = invoice.toJson();
-  final connectivityResult = await Connectivity().checkConnectivity();
+  Future<void> addInvoice(InvoiceModel invoice) async {
+    final json = invoice.toJson();
+    final connectivityResult = await Connectivity().checkConnectivity();
 
+    json['isSynced'] = false;
+    await local.saveInvoice(json);
 
-  json['isSynced'] = false;
-  await local.saveInvoice(json);
-
-  
-  for (var product in invoice.products) {
-    final localProd = await local.getProductByBarcode(product.barcode);
-    if (localProd != null) {
-      final updatedStock = (localProd['stock'] ?? 0) - product.quantity;
-      await local.updateProduct(product.barcode, {
-        ...localProd,
-        'stock': updatedStock < 0 ? 0 : updatedStock,
-      });
-    }
-  }
-
-  
-  if (connectivityResult.last != ConnectivityResult.none) {
-    try {
-      await remote.uploadInvoice(json);
-      for (var product in invoice.products) {
-        await remote.updateProductStock(product.barcode, product.quantity);
+    // reduce stock locally
+    for (var product in invoice.products) {
+      final localProd = await local.getProductByBarcode(product.barcode);
+      if (localProd != null) {
+        final updatedStock = (localProd['stock'] ?? 0) - product.quantity;
+        await local.updateProduct(product.barcode, {
+          ...localProd,
+          'stock': updatedStock < 0 ? 0 : updatedStock,
+        });
       }
-      await local.markAsSynced(json['id']);
-      print('✅ Invoice synced to Firestore');
-    } catch (e) {
-      print('❌ Firestore sync failed, will retry later: $e');
     }
-  } else {
-    print('📴 Offline: invoice will sync when back online');
+
+    // try to sync immediately if online
+    if (connectivityResult != ConnectivityResult.none) {
+      try {
+        await remote.uploadInvoice(json);
+        for (var product in invoice.products) {
+          await remote.updateProductStock(product.barcode, product.quantity);
+        }
+        await local.markAsSynced(json['id']);
+        print('✅ Invoice synced to Firestore');
+      } catch (e) {
+        print('❌ Firestore sync failed, will retry later: $e');
+      }
+    } else {
+      print('📴 Offline: invoice will sync when back online');
+    }
   }
-  
-}
 
   @override
   Future<List<InvoiceModel>> fetchAllInvoices() async {
@@ -120,9 +115,8 @@ Future<void> addInvoice(InvoiceModel invoice) async {
             final cloudStock = doc['stock'] ?? 0;
             product['quantity'] = cloudStock > 0 ? cloudStock : 0;
           }
-          invoice['products'] = invoice['products']
-              .where((p) => p['quantity'] > 0)
-              .toList();
+          invoice['products'] =
+              invoice['products'].where((p) => p['quantity'] > 0).toList();
           invoice['total'] = invoice['products']
               .map((p) => p['price'] * p['quantity'])
               .fold(0.0, (a, b) => a + b);
@@ -143,9 +137,44 @@ Future<void> addInvoice(InvoiceModel invoice) async {
           );
         }
 
-        print(' Invoice ${invoice['id']} synced with concurrency safety.');
+        print('✅ Invoice ${invoice['id']} synced with concurrency safety.');
       } catch (e) {
-        print(' Sync failure for invoice ${invoice['id']}: $e');
+        print('❌ Sync failure for invoice ${invoice['id']}: $e');
+      }
+    }
+  }
+
+  // 🔹 Admin: delete invoice
+  @override
+  Future<void> deleteInvoice(String id) async {
+    await local.deleteInvoice(id);
+
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult != ConnectivityResult.none) {
+      try {
+        await remote.deleteInvoice(id);
+        print('🗑️ Invoice $id deleted from Firestore');
+      } catch (e) {
+        print('⚠️ Failed to delete from Firestore, will retry later: $e');
+        await local.markAsUnsynced(id); 
+      }
+    }
+  }
+
+  // 🔹 Admin: update invoice
+  @override
+  Future<void> updateInvoice(InvoiceModel invoice) async {
+    final json = invoice.toJson();
+    await local.updateInvoice(invoice.id, json);
+
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult != ConnectivityResult.none) {
+      try {
+        await remote.updateInvoice(invoice.id, json);
+        await local.markAsSynced(invoice.id);
+        print('✏️ Invoice ${invoice.id} updated in Firestore');
+      } catch (e) {
+        print('⚠️ Failed to update Firestore, will retry later: $e');
       }
     }
   }

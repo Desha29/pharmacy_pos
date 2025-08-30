@@ -85,41 +85,38 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => LoginCubit(),
-      child: Scaffold(
-        body: AnimatedBuilder(
-          animation: _backgroundAnimation,
-          builder: (context, child) {
-            return Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color.lerp(
-                      AppColors.gradientStart,
-                      AppColors.gradientEnd,
-                      _backgroundAnimation.value * 0.3,
-                    )!,
-                    Color.lerp(
-                      AppColors.gradientEnd,
-                      AppColors.gradientStart,
-                      _backgroundAnimation.value * 0.3,
-                    )!,
-                  ],
-                ),
+    return Scaffold(
+      body: AnimatedBuilder(
+        animation: _backgroundAnimation,
+        builder: (context, child) {
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(
+                    AppColors.gradientStart,
+                    AppColors.gradientEnd,
+                    _backgroundAnimation.value * 0.3,
+                  )!,
+                  Color.lerp(
+                    AppColors.gradientEnd,
+                    AppColors.gradientStart,
+                    _backgroundAnimation.value * 0.3,
+                  )!,
+                ],
               ),
-              child: SafeArea(
-                child: ResponsiveWidget(
-                  mobile: _buildMobileLayout(),
-                  tablet: _buildTabletLayout(),
-                  desktop: _buildDesktopLayout(), 
-                ),
+            ),
+            child: SafeArea(
+              child: ResponsiveWidget(
+                mobile: _buildMobileLayout(),
+                tablet: _buildTabletLayout(),
+                desktop: _buildDesktopLayout(),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -268,21 +265,20 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   void _handleStateChanges(BuildContext context, LoginState state) {
     if (state is LoginSuccess) {
-      motionSnackBarSuccess(context, "Login successful!");
-      context.pushReplacement(AppRouter.kDashboard);
+      motionSnackBarSuccess(context, state.message);
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (state.isAdmin) {
+          context.pushReplacement(AppRouter.kAdminDashboard);
+        } else {
+          context.pushReplacement(AppRouter.kDashboard);
+        }
+      });
     } else if (state is LoginError) {
       _showErrorAnimation();
-motionSnackBarError(context, "Login failed: ${state.errorMessage}");
+      motionSnackBarError(context, state.errorMessage);
     } else if (state is LoginLoading) {
-     
       motionSnackBarInfo(context, "Logging in...");
-} else if (state is LoginValidationError) {
-      if (state.emailError != null) {
-        
-      }
-      if (state.passwordError != null) {
-      
-      }
     }
   }
 
@@ -309,8 +305,6 @@ motionSnackBarError(context, "Login failed: ${state.errorMessage}");
       padding: EdgeInsets.all(cardPadding),
       child: BlocBuilder<LoginCubit, LoginState>(
         builder: (context, state) {
-       
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -404,30 +398,18 @@ motionSnackBarError(context, "Login failed: ${state.errorMessage}");
     );
   }
 
-
   Widget _buildEmailField(BuildContext context, LoginState state) {
-   
-  
-
     return EmailField(
       controller: _emailController,
-     
-      
+
       errorSlideAnimation: _errorSlideAnimation,
-     
     );
   }
 
   Widget _buildPasswordField(BuildContext context, LoginState state) {
-   
- 
-
     return PasswordField(
       label: 'Password',
       controller: _passwordController,
-    
-
-     
 
       errorSlideAnimation: _errorSlideAnimation,
     );
@@ -437,7 +419,8 @@ motionSnackBarError(context, "Login failed: ${state.errorMessage}");
     return Align(
       alignment: Alignment.centerLeft,
       child: GestureDetector(
-        onTap: () => context.read<LoginCubit>().forgotPassword(),
+        onTap: () =>
+            context.read<LoginCubit>().forgotPassword(_emailController.text),
         child: AnimatedDefaultTextStyle(
           duration: AnimationConstants.fast,
           style: AppStyles.linkText(context),
@@ -453,8 +436,8 @@ motionSnackBarError(context, "Login failed: ${state.errorMessage}");
     return CustomButton(
       text: 'Sign In',
       onPressed: () => context.read<LoginCubit>().signIn(
-         _emailController.text,
-         _passwordController.text,
+        _emailController.text,
+        _passwordController.text,
       ),
       isLoading: isLoading,
     );

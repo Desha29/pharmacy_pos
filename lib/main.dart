@@ -1,5 +1,3 @@
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,6 +7,7 @@ import 'package:pharmacy_pos/feature/pos/presentation/cubits/pos_cubit.dart';
 import 'core/config/firebase/firebase_options.dart';
 import 'core/config/routes/app_router.dart';
 import 'core/constants/bloc_observer.dart';
+import 'feature/auth/presentation/cubits/login_cubit.dart';
 import 'feature/pos/data/repositories/invoice_repository_impl.dart';
 import 'feature/pos/data/sources/local_data_source.dart';
 import 'feature/pos/data/sources/remote_data_source.dart';
@@ -50,34 +49,28 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => InvoiceCubit(
-            invoiceRepository,
-            remoteDataSource,
-            localDataSource,
-          )..initializeInvoices(),
-        ),
-BlocProvider(
-  create: (_) {
-    final cubit = PosCubit(
-      invoiceRepository,
-      remoteDataSource,
-      localDataSource,
-    );
-    cubit.startSyncListener(); // Start background sync listener
-    cubit.initializeProducts(); // Optional: load products on start
-    return cubit;
-  },
-),
+  providers: [
+    BlocProvider(
+      create: (_) => InvoiceCubit(invoiceRepository, remoteDataSource, localDataSource)..initializeInvoices(),
+    ),
+    BlocProvider(
+      create: (_) {
+        final cubit = PosCubit(invoiceRepository, remoteDataSource, localDataSource);
+        cubit.startSyncListener();
+        cubit.initializeProducts();
+        return cubit;
+      },
+    ),
+    BlocProvider(
+      create: (_) => LoginCubit(),
+    ),
+  ],
+  child: MaterialApp.router(
+    debugShowCheckedModeBanner: false,
+    routerConfig: AppRouter.router,
+    theme: ThemeData(useMaterial3: true),
+  ),
+);
 
-      ],
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        routerConfig: AppRouter.router,
-        theme: ThemeData(useMaterial3: true),
-      ),
-    );
   }
 }
-

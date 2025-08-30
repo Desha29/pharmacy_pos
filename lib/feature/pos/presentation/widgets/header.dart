@@ -4,10 +4,12 @@ import '../../../../core/animations/animations.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/responsive/responsive_layout.dart';
 import '../../../../core/theme/text_styles.dart';
-import '../../data/sources/local_data_source.dart';
+
 
 class Header extends StatefulWidget {
   final String activeNavItem;
+  final String email;
+  
   final VoidCallback onToggleSidebar;
   final bool isMobile;
 
@@ -16,6 +18,7 @@ class Header extends StatefulWidget {
     required this.activeNavItem,
     required this.onToggleSidebar,
     required this.isMobile,
+    required this.email,
   });
 
   @override
@@ -104,15 +107,14 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "User",
+                                  widget.email.split('@').first,
                                   style: AppStyles.bodyLarge.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  
-                                  "user@pharmpos.com",
+                                  widget.email,
                                   style: AppStyles.bodySmall,
                                 ),
                               ],
@@ -141,7 +143,6 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
   }
 
   void _toggleUserMenu({bool? forceClose}) {
-   LocalDataSource().clearAllData();
     final shouldShow = forceClose == true ? false : !_showUserMenu;
     setState(() {
       _showUserMenu = shouldShow;
@@ -269,7 +270,7 @@ class _HeaderState extends State<Header> with SingleTickerProviderStateMixin {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            "U",
+                            widget.email.split('@').first[0].toUpperCase(),
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,

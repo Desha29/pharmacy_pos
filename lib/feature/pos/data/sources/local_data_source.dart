@@ -4,6 +4,8 @@ class LocalDataSource {
   final Box invoiceBox = Hive.box('invoices');
   final Box productBox = Hive.box('products');
 
+  // ----------------- INVOICES -----------------
+
   Future<void> saveInvoice(Map<String, dynamic> invoice) async {
     await invoiceBox.put(invoice['id'], invoice);
   }
@@ -24,15 +26,45 @@ class LocalDataSource {
     }
   }
 
+  Future<void> markAsUnsynced(String id) async {
+    final invoice = invoiceBox.get(id);
+    if (invoice != null) {
+      final updated = Map<String, dynamic>.from(invoice);
+      updated['isSynced'] = false;
+      await invoiceBox.put(id, updated);
+    }
+  }
+
   List<Map<String, dynamic>> getUnsyncedInvoices() {
     return getInvoices().where((i) => i['isSynced'] == false).toList();
   }
+
+  Future<void> deleteInvoice(String id) async {
+    await invoiceBox.delete(id);
+  }
+
+  Future<void> updateInvoice(
+    String id,
+    Map<String, dynamic> updatedData,
+  ) async {
+    final existing = invoiceBox.get(id);
+    if (existing != null) {
+      final updated = {...Map<String, dynamic>.from(existing), ...updatedData};
+      await invoiceBox.put(id, updated);
+    }
+  }
+
+  // ----------------- PRODUCTS -----------------
 
   List<Map<String, dynamic>> getProducts() {
     return productBox.values
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList();
+  }
+
+  Future<void> saveProduct(Map<String, dynamic> product) async {
+    await productBox.put(product['barcode'], product);
   }
 
   Future<void> updateProduct(String barcode, Map<String, dynamic> data) async {
@@ -46,6 +78,12 @@ class LocalDataSource {
     }
     return null;
   }
+
+  Future<void> deleteProduct(String barcode) async {
+    await productBox.delete(barcode);
+  }
+
+  // ----------------- UTILITIES -----------------
 
   /// 🔥 Deletes all stored invoices and products from local Hive boxes
   Future<void> clearAllData() async {

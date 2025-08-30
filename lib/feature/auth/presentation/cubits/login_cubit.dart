@@ -5,74 +5,75 @@ import 'login_state.dart';
 class LoginCubit extends Cubit<LoginState> {
   LoginCubit() : super(const LoginInitial());
 
+
   void signIn(String email, String password) async {
-    // Start loading
-    emit(LoginLoading(email: email, password: password));
+    emit(LoginLoading(email: email));
 
     try {
-      if (email == "user@pharmpos.com" && password == "123456") {
-        emit(LoginSuccess(email: email, message: 'Login successful'));
-      } else {
-        FirebaseHelper.signInWithEmailAndPassword(email, password)
-            .then((_) {
-              // Emit success state
-              emit(LoginSuccess(email: email, message: 'Login successful'));
-            })
-            .catchError((error) {
-              // Emit error state
-              emit(
-                LoginError(
-                  email: email,
-                  password: password,
 
-                  errorMessage: error.toString(),
-                ),
-              );
-            });
-      }
- 
-    } catch (e) {
-      emit(
-        LoginError(
+      if (email == "admin@pharmpos.com" && password == "admin123") {
+   
+        await FirebaseHelper.signInWithEmailAndPassword(email, password);
+
+        emit(LoginSuccess(
           email: email,
-          password: password,
+          message: 'Admin login successful',
+          isAdmin: true,
+        ));
+        return;
+      }
 
-          errorMessage: 'An error occurred during login: ${e.toString()}',
-        ),
-      );
+      // ----------------- HARDCODED DEMO USER -----------------
+      if (email == "user@pharmpos.com" && password == "123456") {
+        await FirebaseHelper.signInWithEmailAndPassword(email, password);
+
+        emit(LoginSuccess(
+          email: email,
+          message: 'Demo user login successful',
+          isAdmin: false,
+        ));
+        return;
+      }
+
+      // ----------------- NORMAL FIREBASE LOGIN -----------------
+      await FirebaseHelper.signInWithEmailAndPassword(email, password);
+
+     
+      emit(LoginSuccess(
+        email: email,
+        message: 'Login successful',
+        isAdmin: false,
+      ));
+    } catch (e) {
+      emit(LoginError(
+        email: email,
+        password: password,
+        errorMessage: e.toString(),
+      ));
     }
   }
 
-  void forgotPassword() {
-    // Handle forgot password logic
-    print('Forgot password clicked');
+ 
+  void forgotPassword(String email) async {
+    emit(LoginLoading(email: email));
+
+    try {
+      await FirebaseHelper.sendPasswordReset(email);
+      emit(LoginSuccess(
+        email: email,
+        message: 'Password reset email sent. Check your inbox!',
+      ));
+    } catch (e) {
+      emit(LoginError(
+        email: email,
+        password: '',
+        errorMessage: e.toString(),
+      ));
+    }
   }
 
-  void navigateToSignUp() {
-    // Handle navigation to sign up
-  }
-
+ 
   void resetToInitial() {
     emit(const LoginInitial());
-  }
-
-  String? _validateEmail(String email) {
-    if (email.isEmpty) {
-      return 'Email is required';
-    }
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-      return 'Please enter a valid email address';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String password) {
-    if (password.isEmpty) {
-      return 'Password is required';
-    }
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-    return null;
   }
 }

@@ -11,22 +11,18 @@ class LoginInitial extends LoginState {
   final String email;
   final String password;
 
-
   const LoginInitial({
     this.email = '',
     this.password = '',
-   
   });
 
   LoginInitial copyWith({
     String? email,
     String? password,
-    bool? rememberMe,
   }) {
     return LoginInitial(
       email: email ?? this.email,
       password: password ?? this.password,
-   
     );
   }
 
@@ -36,47 +32,46 @@ class LoginInitial extends LoginState {
 
 class LoginLoading extends LoginState {
   final String email;
-  final String password;
-
+  
 
   const LoginLoading({
     required this.email,
-    required this.password,
-  
+   
   });
 
   @override
-  List<Object?> get props => [email, password];
+  List<Object?> get props => [email];
 }
 
 class LoginSuccess extends LoginState {
   final String email;
   final String message;
+  final bool isAdmin; // ✅ new
 
   const LoginSuccess({
     required this.email,
     this.message = 'Login successful',
+    this.isAdmin = false, // default normal user
   });
 
   @override
-  List<Object?> get props => [email, message];
+  List<Object?> get props => [email, message, isAdmin];
 }
+
 
 class LoginError extends LoginState {
   final String email;
   final String password;
-  
   final String errorMessage;
 
   const LoginError({
     required this.email,
     required this.password,
-  
     required this.errorMessage,
   });
 
   @override
-  List<Object?> get props => [email, password,  errorMessage];
+  List<Object?> get props => [email, password, errorMessage];
 }
 
 class LoginValidationError extends LoginState {

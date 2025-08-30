@@ -68,4 +68,45 @@ class ProductRepositoryImpl implements ProductRepository {
       print('❌ Product sync failed: $e');
     }
   }
+  
+  @override
+  Future<void> addProduct(ProductModel product) async {
+    // Save locally first
+    await local.updateProduct(product.barcode, product.toJson());
+
+    try {
+      // Try saving remotely
+      await remote.addProduct(product.toJson());
+    } catch (e) {
+      print('⚠️ Remote add failed for ${product.barcode}: $e');
+      // If fails, mark as unsynced
+      await local.markAsUnsynced(product.barcode);
+    }
+  }
+
+  @override
+  Future<void> updateProduct(ProductModel product) async {
+    await local.updateProduct(product.barcode, product.toJson());
+
+    try {
+     await remote.updateProduct(product.barcode, product.toJson());
+
+    } catch (e) {
+      print('⚠️ Remote update failed for ${product.barcode}: $e');
+      await local.markAsUnsynced(product.barcode);
+    }
+  }
+
+  @override
+  Future<void> deleteProduct(String barcode) async {
+    await local.deleteProduct(barcode);
+
+    try {
+      await remote.deleteProduct(barcode);
+    } catch (e) {
+      print('⚠️ Remote delete failed for $barcode: $e');
+      await local.markAsUnsynced(barcode);
+    }
+  }
+
 }
